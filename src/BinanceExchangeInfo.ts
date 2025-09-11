@@ -1,4 +1,4 @@
-type FetchFn = (input: string, init?: RequestInit) => Promise<Response>
+type FetchFn = (input: string, init?: any) => Promise<any>
 
 export interface FetchOptions {
 	fetchFn: FetchFn
