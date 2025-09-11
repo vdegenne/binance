@@ -1,0 +1,38 @@
+{
+	"name": "@vdegenne/binance",
+	"version": "0.1.0",
+	"description": "",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./types.d.ts"
+		},
+		"./BinanceExchangeInfo.js": {
+			"import": "./lib/BinanceExchangeInfo.js",
+			"types": "./lib/BinanceExchangeInfo.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "wireit"
+	},
+	"files": [],
+	"devDependencies": {
+		"@types/node": "^24.3.1",
+		"typescript": "^5.9.2",
+		"wireit": "^0.14.12"
+	},
+	"wireit": {
+		"build": {
+			"command": "tsc --pretty",
+			"clean": "if-file-deleted",
+			"files": [
+				"./tsconfig.json",
+				"./src",
+				"./types.d.ts"
+			],
+			"output": [
+				"./lib"
+			]
+		}
+	}
+}
