@@ -52,6 +52,36 @@ declare global {
 			filters: any[]
 			permissions: Permission[]
 		}
+
+		type Candle = {
+			openTime: number
+			open: string
+			high: string
+			low: string
+			close: string
+			volume: string
+			closeTime: number
+			quoteAssetVolume: string
+			numberOfTrades: number
+			takerBuyBaseAssetVolume: string
+			takerBuyQuoteAssetVolume: string
+		}
+
+		type Interval = '1d' | '1h'
+
+		type KlineTuple = [
+			number,
+			string,
+			string,
+			string,
+			string,
+			string,
+			number,
+			string,
+			number,
+			string,
+			string,
+		]
 	}
 }
 

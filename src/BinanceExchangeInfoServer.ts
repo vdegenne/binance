@@ -24,7 +24,7 @@ export class BinanceExchangeInfoServer extends BinanceExchangeInfo {
 
 		// Set defaults for options
 		this.#options = {
-			cacheFilePath: './data/exchange-info.json',
+			cacheFilePath: './data/exchangeInfo.json',
 			prefetch: false,
 			...options,
 		}

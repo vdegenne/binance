@@ -1,7 +1,4 @@
-type FetchFn = (input: string, init?: any) => Promise<any>
-
 export interface FetchOptions {
-	fetchFn: FetchFn
 	/**
 	 * @default false
 	 */
@@ -32,9 +29,7 @@ export class BinanceExchangeInfo {
 
 	async fetchData() {
 		this.#fetchPromiseWithResolvers = Promise.withResolvers()
-		const res = await this.#options.fetchFn(
-			'https://api.binance.com/api/v3/exchangeInfo',
-		)
+		const res = await fetch('https://api.binance.com/api/v3/exchangeInfo')
 		if (!res.ok) throw new Error(`Erreur ${res.status}`)
 		this._data = await res.json()
 		this.#fetchPromiseWithResolvers.resolve(this._data)
