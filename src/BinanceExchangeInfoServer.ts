@@ -19,7 +19,7 @@ export class BinanceExchangeInfoServer extends BinanceExchangeInfo {
 		return this.#fetchPromiseWithResolvers.promise
 	}
 
-	constructor(options: ServerOptions) {
+	constructor(options?: Partial<ServerOptions>) {
 		super({...options, prefetch: false}) // Do not prefetch directly
 
 		// Set defaults for options
@@ -27,6 +27,7 @@ export class BinanceExchangeInfoServer extends BinanceExchangeInfo {
 			cacheFilePath: './data/exchangeInfo.json',
 			prefetch: false,
 			...options,
+			cache: undefined, // Cache is managed internally
 		}
 
 		this.#fetchPromiseWithResolvers = Promise.withResolvers()

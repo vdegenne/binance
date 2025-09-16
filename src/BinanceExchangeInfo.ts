@@ -3,6 +3,11 @@ export interface FetchOptions {
 	 * @default false
 	 */
 	prefetch?: boolean
+
+	/**
+	 * Inject data directly
+	 */
+	cache: string | undefined
 }
 
 export class BinanceExchangeInfo {
@@ -23,10 +28,12 @@ export class BinanceExchangeInfo {
 		return this.#fetchPromiseWithResolvers.promise
 	}
 
-	constructor(options: FetchOptions) {
-		this.#options = {prefetch: false, ...options}
+	constructor(options?: Partial<FetchOptions>) {
+		this.#options = {prefetch: false, cache: undefined, ...options}
 
-		if (this.#options.prefetch) {
+		if (this.#options.cache) {
+			this._data = JSON.parse(this.#options.cache) as Binance.ExchangeInfo
+		} else if (this.#options.prefetch) {
 			this.fetchData()
 		}
 	}

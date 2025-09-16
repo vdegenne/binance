@@ -1,8 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {BatchBase, BatchBaseOptions} from './BatchBase.js'
-import {BinanceExchangeInfo} from '../BinanceExchangeInfo.js'
 import {BinanceExchangeInfoServer} from '../BinanceExchangeInfoServer.js'
+import {BatchBase, BatchBaseOptions} from './BatchBase.js'
 
 interface BatchServerOptions {
 	/**
@@ -61,14 +60,29 @@ export class BatchServer extends BatchBase {
 		const pairsDir = path.join(dirpath, 'pairs')
 		await fs.mkdir(pairsDir, {recursive: true})
 
+		// Step 1: create the map
+		const pairsKlinesMap: Record<string, any> = {}
+		this.pairs.forEach((pair) => {
+			const key = `${pair.base}_${pair.quote}`
+			pairsKlinesMap[key] = pair.getRawCandles()
+		})
+
+		// Step 2: save each pair separately
 		await Promise.all(
-			this.pairs.map((pair) =>
+			Object.entries(pairsKlinesMap).map(([pairName, candles]) =>
 				fs.writeFile(
-					path.join(pairsDir, `${pair.base}_${pair.quote}.json`),
-					JSON.stringify(pair.getRawCandles()),
+					path.join(pairsDir, `${pairName}.json`),
+					JSON.stringify(candles),
 					'utf-8',
 				),
 			),
+		)
+
+		// Step 3: save the full map as one big file
+		await fs.writeFile(
+			path.join(dirpath, 'klines.json'),
+			JSON.stringify(pairsKlinesMap),
+			'utf-8',
 		)
 	}
 }

@@ -11,6 +11,10 @@
 			"import": "./lib/BinanceExchangeInfo.js",
 			"types": "./lib/BinanceExchangeInfo.d.ts"
 		},
+		"./batch.js": {
+			"import": "./lib/batch/BatchClient.js",
+			"types": "./lib/batch/BatchClient.d.ts"
+		},
 		"./server/binanceExchangeInfo.js": {
 			"import": "./lib/BinanceExchangeInfoServer.js",
 			"types": "./lib/BinanceExchangeInfoServer.d.ts"

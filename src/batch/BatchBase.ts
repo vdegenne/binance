@@ -75,7 +75,7 @@ export class BatchBase {
 		resolve()
 	}
 
-	async #fetchPairsWithThrottle(pairs: Pair[], batchSize = 10, delayMs = 1000) {
+	async #fetchPairsWithThrottle(pairs: Pair[], batchSize = 20, delayMs = 500) {
 		for (let i = 0; i < pairs.length; i += batchSize) {
 			const batch = pairs.slice(i, i + batchSize)
 			await Promise.allSettled(batch.map((p) => p.fetch()))
