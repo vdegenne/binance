@@ -69,6 +69,22 @@ declare global {
 
 		type Interval = '1d' | '1h'
 
+		interface KlinesOptions {
+			/**
+			 * Interval between each kline.
+			 *
+			 * @default "1d"
+			 */
+			interval: Binance.Interval
+
+			/**
+			 * Limit the number of klines to fetch.
+			 *
+			 * @default 100
+			 */
+			limit: number
+		}
+
 		type KlineTuple = [
 			number,
 			string,
@@ -82,6 +98,19 @@ declare global {
 			string,
 			string,
 		]
+
+		type BaseQuotePair = [string, string]
+
+		interface BatchInfo {
+			/** Date of the batch run */
+			timestamp: number
+			/** All USDT pairs found at this time */
+			pairs: BaseQuotePair[]
+			/** New pairs over last batch */
+			added: BaseQuotePair[] | undefined
+			/** Removed pairs over last batch */
+			removed: BaseQuotePair[] | undefined
+		}
 	}
 }
 

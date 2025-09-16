@@ -1,19 +1,10 @@
 import {KlineIndex} from './kline.js'
 
-interface PairOptions {
-	/**
-	 * @default "1d"
-	 */
-	interval: Binance.Interval
-	/**
-	 * @default 100
-	 */
-	limit: number
+interface PairOptions extends Binance.KlinesOptions {
 	/**
 	 * @default false
 	 */
 	prefetch: boolean
-
 	/**
 	 * Used for hydration
 	 */
@@ -27,6 +18,10 @@ export class Pair {
 	fetchPromise?: Promise<Binance.KlineTuple[]>
 	#rawCandles: Binance.KlineTuple[] = []
 	#cachedCandles?: Binance.Candle[]
+
+	getRawCandles(): Readonly<Binance.KlineTuple[]> {
+		return [...this.#rawCandles] // returns a copy
+	}
 
 	constructor(base: string, quote: string, options?: Partial<PairOptions>) {
 		this.base = base

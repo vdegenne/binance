@@ -7,13 +7,21 @@
 		".": {
 			"types": "./types.d.ts"
 		},
-		"./BinanceExchangeInfo.js": {
+		"./binanceExchangeInfo.js": {
 			"import": "./lib/BinanceExchangeInfo.js",
 			"types": "./lib/BinanceExchangeInfo.d.ts"
 		},
-		"./BinanceExchangeInfoServer.js": {
+		"./server/binanceExchangeInfo.js": {
 			"import": "./lib/BinanceExchangeInfoServer.js",
 			"types": "./lib/BinanceExchangeInfoServer.d.ts"
+		},
+		"./server/batch.js": {
+			"import": "./lib/batch/BatchServer.js",
+			"types": "./lib/batch/BatchServer.d.ts"
+		},
+		"./server/batchesManager.js": {
+			"import": "./lib/batch/BatchesManagerServer.js",
+			"types": "./lib/batch/BatchesManagerServer.d.ts"
 		}
 	},
 	"scripts": {

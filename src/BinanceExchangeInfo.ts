@@ -9,6 +9,10 @@ export class BinanceExchangeInfo {
 	#options: FetchOptions
 	protected _data: Binance.ExchangeInfo | undefined
 
+	getData(): Readonly<Binance.ExchangeInfo> | undefined {
+		return this._data
+	}
+
 	#fetchPromiseWithResolvers:
 		| PromiseWithResolvers<Binance.ExchangeInfo | undefined>
 		| undefined
@@ -36,7 +40,7 @@ export class BinanceExchangeInfo {
 		return this._data
 	}
 
-	getAllUsdtPairs() {
+	filterPairs(quote: string) {
 		if (this._data === undefined) {
 			throw new Error(
 				'No data available, please wait for the first fetch to complete',
@@ -44,7 +48,11 @@ export class BinanceExchangeInfo {
 		}
 
 		return this._data.symbols.filter(
-			(symbol) => symbol.quoteAsset === 'USDT' && symbol.status === 'TRADING',
+			(symbol) => symbol.quoteAsset === quote && symbol.status === 'TRADING',
 		)
+	}
+
+	getAllUsdtPairs() {
+		return this.filterPairs('USDT')
 	}
 }
