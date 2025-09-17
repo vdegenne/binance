@@ -1,4 +1,4 @@
-import {BatchClient} from './BatchClient.js'
+import {BatchClient, HydrationOptions} from './BatchClient.js'
 
 interface BatchesManagerClientOptions {
 	/**
@@ -40,13 +40,18 @@ export class BatchesManagerClient {
 		}))
 	}
 
-	async hydrateBatch(batchId: string) {
+	rehydrationComplete: Promise<BatchClient> | undefined
+
+	hydrateBatch(batchId: string, options?: Partial<HydrationOptions>) {
 		const batch = this.batches.find((b) => b.id === batchId)
 		if (!batch) {
 			throw new Error(
 				"This batch doesn't exist, have you waited the fetch to finish?",
 			)
 		}
-		await batch.fetchLocal()
+
+		batch.rehydrate(options)
+
+		return (this.rehydrationComplete = batch.rehydrationComplete)
 	}
 }

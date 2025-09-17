@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/binance",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -14,6 +14,10 @@
 		"./batch.js": {
 			"import": "./lib/batch/BatchClient.js",
 			"types": "./lib/batch/BatchClient.d.ts"
+		},
+		"./batchesManager.js": {
+			"import": "./lib/batch/BatchesManagerClient.js",
+			"types": "./lib/batch/BatchesManagerClient.d.ts"
 		},
 		"./server/binanceExchangeInfo.js": {
 			"import": "./lib/BinanceExchangeInfoServer.js",

@@ -8,6 +8,18 @@ interface BatchClientOptions {
 	baseDirPath: string
 }
 
+export interface HydrationOptions {
+	/**
+	 * @default false
+	 */
+	includeExchangeInfo: boolean
+
+	/**
+	 * @default false
+	 */
+	includePairs: boolean
+}
+
 export class BatchClient extends BatchBase {
 	id: string | undefined
 	#options: BatchClientOptions
@@ -28,34 +40,60 @@ export class BatchClient extends BatchBase {
 		return super.fetchRemote()
 	}
 
-	async fetchLocal(batchId = this.id) {
-		if (batchId === undefined) {
+	rehydrationComplete: Promise<BatchClient> | undefined
+
+	async rehydrate(options?: Partial<HydrationOptions>) {
+		const {promise, resolve} = Promise.withResolvers<BatchClient>()
+		this.rehydrationComplete = promise
+
+		if (this.id === undefined) {
 			throw new Error(
-				'You need to provide a valid ID, or set batch.id before fetching locally.',
+				'You need to provide set batch.id before fetching locally.',
 			)
 		}
-		const base = `${this.#options.baseDirPath}/${batchId}`
 
-		const infoUrl = `${base}/info.json`
-		const exchangeInfoUrl = `${base}/exchangeInfo.json`
-
-		const [infoRes, exchangeRes] = await Promise.all([
-			fetch(infoUrl),
-			fetch(exchangeInfoUrl),
-		])
-
-		if (!infoRes.ok) {
-			throw new Error(`Failed to fetch info.json at ${infoUrl}`)
-		}
-		if (!exchangeRes.ok) {
-			throw new Error(`Failed to fetch exchangeInfo.json at ${exchangeInfoUrl}`)
+		const _options: HydrationOptions = {
+			includeExchangeInfo: false,
+			includePairs: false,
+			...options,
 		}
 
-		this.info = (await infoRes.json()) as Binance.BatchInfo
+		const base = `${this.#options.baseDirPath}/${this.id}`
+		const urls: (string | undefined)[] = [
+			`${base}/info.json`,
+			_options.includeExchangeInfo ? `${base}/exchangeInfo.json` : undefined,
+			_options.includePairs ? `${base}/pairs.json` : undefined, // placeholder
+		]
+
+		// Build array of fetch promises, skipping undefined
+		const fetchPromises = urls.map((url) =>
+			url
+				? fetch(url).then((res) => {
+						if (!res.ok) throw new Error(`Failed to fetch ${url}`)
+						// Use json for info/pairs, text for exchangeInfo
+						return url.includes('exchangeInfo.json') ? res.text() : res.json()
+					})
+				: undefined,
+		)
+
+		// Wait for all to resolve
+		const [info, exchangeText, pairs] = await Promise.all(fetchPromises)
+
+		// Concurrently handle results
+		this.info = info as Binance.BatchInfo
 		this.id = this.info.timestamp.toString()
-		this._binanceExchangeInfo = new BinanceExchangeInfo({
-			prefetch: false,
-			cache: await exchangeRes.text(),
-		})
+
+		if (exchangeText !== undefined) {
+			this._binanceExchangeInfo = new BinanceExchangeInfo({
+				prefetch: false,
+				cache: exchangeText,
+			})
+		}
+
+		if (pairs !== undefined) {
+			// process pairs here if needed
+		}
+
+		resolve(this)
 	}
 }
