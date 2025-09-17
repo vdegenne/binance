@@ -1,14 +1,12 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {BatchServer} from './BatchServer.js'
+import {BatchServer, BatchServerOptions} from './BatchServer.js'
 
 const t = setTimeout(() => {})
 
-interface BatchesManagerServerOptions extends Binance.KlinesOptions {
-	/**
-	 * @default ./data
-	 */
-	baseDirPath: string
+interface BatchesManagerServerOptions
+	extends Binance.KlinesOptions,
+		BatchServerOptions {
 	/**
 	 * How many batches to keep
 	 *
@@ -26,6 +24,7 @@ export class BatchesManagerServer {
 			interval: '1d',
 			keepLast: 10,
 			limit: 100,
+			separateFiles: false,
 			...options,
 		}
 	}

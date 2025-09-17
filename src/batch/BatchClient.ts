@@ -9,6 +9,7 @@ interface BatchClientOptions {
 }
 
 export class BatchClient extends BatchBase {
+	id: string | undefined
 	#options: BatchClientOptions
 
 	constructor(options?: Partial<BatchBaseOptions & BatchClientOptions>) {
@@ -27,7 +28,12 @@ export class BatchClient extends BatchBase {
 		return super.fetchRemote()
 	}
 
-	async fetchLocal(batchId: string) {
+	async fetchLocal(batchId = this.id) {
+		if (batchId === undefined) {
+			throw new Error(
+				'You need to provide a valid ID, or set batch.id before fetching locally.',
+			)
+		}
 		const base = `${this.#options.baseDirPath}/${batchId}`
 
 		const infoUrl = `${base}/info.json`
@@ -46,6 +52,7 @@ export class BatchClient extends BatchBase {
 		}
 
 		this.info = (await infoRes.json()) as Binance.BatchInfo
+		this.id = this.info.timestamp.toString()
 		this._binanceExchangeInfo = new BinanceExchangeInfo({
 			prefetch: false,
 			cache: await exchangeRes.text(),

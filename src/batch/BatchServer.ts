@@ -3,7 +3,7 @@ import path from 'node:path'
 import {BinanceExchangeInfoServer} from '../BinanceExchangeInfoServer.js'
 import {BatchBase, BatchBaseOptions} from './BatchBase.js'
 
-interface BatchServerOptions {
+export interface BatchServerOptions {
 	/**
 	 * @default ./data
 	 */
