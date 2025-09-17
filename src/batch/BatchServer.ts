@@ -8,6 +8,14 @@ interface BatchServerOptions {
 	 * @default ./data
 	 */
 	baseDirPath: string
+
+	/**
+	 * If true, will save each pairs and their klines in dedicated files.
+	 * A big file (called `klines.json`) will still be generated at the base dir of the batch.
+	 *
+	 * @default false
+	 */
+	separateFiles: boolean
 }
 
 export class BatchServer extends BatchBase {
@@ -18,6 +26,7 @@ export class BatchServer extends BatchBase {
 		super(options)
 		this.#options = {
 			baseDirPath: './data',
+			separateFiles: false,
 			...options,
 		}
 	}
@@ -57,9 +66,6 @@ export class BatchServer extends BatchBase {
 			JSON.stringify(this.info),
 		)
 
-		const pairsDir = path.join(dirpath, 'pairs')
-		await fs.mkdir(pairsDir, {recursive: true})
-
 		// Step 1: create the map
 		const pairsKlinesMap: Record<string, any> = {}
 		this.pairs.forEach((pair) => {
@@ -68,15 +74,20 @@ export class BatchServer extends BatchBase {
 		})
 
 		// Step 2: save each pair separately
-		await Promise.all(
-			Object.entries(pairsKlinesMap).map(([pairName, candles]) =>
-				fs.writeFile(
-					path.join(pairsDir, `${pairName}.json`),
-					JSON.stringify(candles),
-					'utf-8',
+		if (this.#options.separateFiles) {
+			const pairsDir = path.join(dirpath, 'pairs')
+			await fs.mkdir(pairsDir, {recursive: true})
+
+			await Promise.all(
+				Object.entries(pairsKlinesMap).map(([pairName, candles]) =>
+					fs.writeFile(
+						path.join(pairsDir, `${pairName}.json`),
+						JSON.stringify(candles),
+						'utf-8',
+					),
 				),
-			),
-		)
+			)
+		}
 
 		// Step 3: save the full map as one big file
 		await fs.writeFile(
