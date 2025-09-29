@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/binance",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -47,7 +47,10 @@
 	"scripts": {
 		"build": "wireit"
 	},
-	"files": [],
+	"files": [
+		"./lib/",
+		"./types.d.ts"
+	],
 	"devDependencies": {
 		"@types/node": "^24.3.1",
 		"typescript": "^5.9.2",
