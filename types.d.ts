@@ -110,7 +110,14 @@ declare global {
 			added: BaseQuotePair[] | undefined
 			/** Removed pairs over last batch */
 			removed: BaseQuotePair[] | undefined
+
+			/** The interval used for the batch */
+			interval: Interval
+			/** The limit (how many candles for one pair) were used during the batch? */
+			limit: number
 		}
+
+		type PairsKlinesMap = {[pair_name: string]: Readonly<KlineTuple[]>}
 	}
 }
 

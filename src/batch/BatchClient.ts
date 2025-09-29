@@ -1,7 +1,8 @@
 import {BinanceExchangeInfo} from '../BinanceExchangeInfo.js'
+import {Pair} from '../Pair.js'
 import {BatchBase, BatchBaseOptions} from './BatchBase.js'
 
-interface BatchClientOptions {
+interface BatchClientOptions extends BatchBaseOptions {
 	/**
 	 * @default "/data/"
 	 */
@@ -18,19 +19,25 @@ export interface HydrationOptions {
 	 * @default false
 	 */
 	includePairs: boolean
+
+	/**
+	 * @default false
+	 */
+	force: boolean
 }
 
 export class BatchClient extends BatchBase {
 	id: string | undefined
-	#options: BatchClientOptions
+	protected _options!: BatchClientOptions
 
-	constructor(options?: Partial<BatchBaseOptions & BatchClientOptions>) {
+	constructor(options?: Partial<BatchClientOptions>) {
 		super(options)
-		this.#options = {
+		this._options = {
 			baseDirPath: '/data/',
-			...options,
+			...(this._options as BatchBaseOptions),
 		}
 	}
+
 	fetchRemote(areYouSure = false): Promise<void> {
 		if (!areYouSure) {
 			throw new Error(
@@ -40,60 +47,95 @@ export class BatchClient extends BatchBase {
 		return super.fetchRemote()
 	}
 
-	rehydrationComplete: Promise<BatchClient> | undefined
+	#infoHydrated = false
+	#exchangeHydrated = false
+	#pairsHydrated = false
 
-	async rehydrate(options?: Partial<HydrationOptions>) {
-		const {promise, resolve} = Promise.withResolvers<BatchClient>()
-		this.rehydrationComplete = promise
+	async #rehydrateInfo(force = false): Promise<void> {
+		if (this.#infoHydrated && !force) return
+		if (!this.id)
+			throw new Error('Batch.id must be set before rehydrating info.')
 
-		if (this.id === undefined) {
-			throw new Error(
-				'You need to provide set batch.id before fetching locally.',
-			)
-		}
+		const url = `${this._options.baseDirPath}/${this.id}/info.json`
+		const res = await fetch(url)
+		if (!res.ok) throw new Error(`Failed to fetch ${url}`)
 
+		this.info = (await res.json()) as Binance.BatchInfo
+		this.id = this.info.timestamp.toString()
+		this.#infoHydrated = true
+	}
+
+	async #rehydrateExchangeInfo(force = false): Promise<void> {
+		if (this.#exchangeHydrated && !force) return
+		if (!this.id)
+			throw new Error('Batch.id must be set before rehydrating exchangeInfo.')
+
+		const url = `${this._options.baseDirPath}/${this.id}/exchangeInfo.json`
+		const res = await fetch(url)
+		if (!res.ok) throw new Error(`Failed to fetch ${url}`)
+
+		const text = await res.text()
+		this._binanceExchangeInfo = new BinanceExchangeInfo({
+			prefetch: false,
+			cache: text,
+		})
+		this.#exchangeHydrated = true
+	}
+
+	async #rehydratePairs(force = false): Promise<void> {
+		if (this.#pairsHydrated && !force) return
+		if (!this.id)
+			throw new Error('Batch.id must be set before rehydrating pairs.')
+
+		const url = `${this._options.baseDirPath}/${this.id}/klines.json`
+		const res = await fetch(url)
+		if (!res.ok) throw new Error(`Failed to fetch ${url}`)
+
+		const pairs = (await res.json()) as Binance.PairsKlinesMap
+		this.pairs = Object.entries(pairs).map(([pair_name, klines]) => {
+			const [base, quote] = pair_name.split('_')
+			return new Pair(base, quote, {
+				prefetch: false,
+				rawCandles: klines,
+				...this._options,
+			})
+		})
+		this.#pairsHydrated = true
+	}
+
+	#rehydrationPromise: Promise<BatchClient> | null = null
+	get rehydrationComplete() {
+		return this.#rehydrationPromise
+	}
+
+	rehydrate(options?: Partial<HydrationOptions>): Promise<BatchClient> {
 		const _options: HydrationOptions = {
 			includeExchangeInfo: false,
 			includePairs: false,
+			force: false,
 			...options,
 		}
 
-		const base = `${this.#options.baseDirPath}/${this.id}`
-		const urls: (string | undefined)[] = [
-			`${base}/info.json`,
-			_options.includeExchangeInfo ? `${base}/exchangeInfo.json` : undefined,
-			_options.includePairs ? `${base}/pairs.json` : undefined, // placeholder
-		]
+		if (this.#rehydrationPromise && !_options.force)
+			return this.#rehydrationPromise
 
-		// Build array of fetch promises, skipping undefined
-		const fetchPromises = urls.map((url) =>
-			url
-				? fetch(url).then((res) => {
-						if (!res.ok) throw new Error(`Failed to fetch ${url}`)
-						// Use json for info/pairs, text for exchangeInfo
-						return url.includes('exchangeInfo.json') ? res.text() : res.json()
-					})
-				: undefined,
-		)
+		const {promise, resolve, reject} = Promise.withResolvers<BatchClient>()
+		this.#rehydrationPromise = promise
 
-		// Wait for all to resolve
-		const [info, exchangeText, pairs] = await Promise.all(fetchPromises)
+		try {
+			const tasks: Promise<void>[] = [this.#rehydrateInfo(_options.force)]
+			if (_options.includeExchangeInfo)
+				tasks.push(this.#rehydrateExchangeInfo(_options.force))
+			if (_options.includePairs)
+				tasks.push(this.#rehydratePairs(_options.force))
 
-		// Concurrently handle results
-		this.info = info as Binance.BatchInfo
-		this.id = this.info.timestamp.toString()
-
-		if (exchangeText !== undefined) {
-			this._binanceExchangeInfo = new BinanceExchangeInfo({
-				prefetch: false,
-				cache: exchangeText,
-			})
+			Promise.all(tasks)
+				.then(() => resolve(this))
+				.catch(reject)
+		} catch (err) {
+			reject(err)
 		}
 
-		if (pairs !== undefined) {
-			// process pairs here if needed
-		}
-
-		resolve(this)
+		return this.#rehydrationPromise
 	}
 }

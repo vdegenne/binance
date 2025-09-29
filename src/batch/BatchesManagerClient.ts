@@ -12,7 +12,7 @@ export class BatchesManagerClient {
 	fetchPromise: Promise<void> | undefined
 	#options: BatchesManagerClientOptions
 
-	batches: BatchClient[] = []
+	#batches: BatchClient[] = []
 
 	constructor(options?: Partial<BatchesManagerClientOptions>) {
 		this.#options = {baseDirPath: '/data/', ...options}
@@ -27,7 +27,7 @@ export class BatchesManagerClient {
 				this.batchIds = await res.json()
 			}
 
-			this.batches = this.batchIds.map((batchId) => {
+			this.#batches = this.batchIds.map((batchId) => {
 				const batch = new BatchClient({baseDirPath})
 				batch.id = batchId
 				return batch
@@ -40,18 +40,29 @@ export class BatchesManagerClient {
 		}))
 	}
 
-	rehydrationComplete: Promise<BatchClient> | undefined
+	getBatchFromId(batchId: string) {
+		return this.#batches.find((b) => b.id === batchId)
+	}
+	getBatchFromIndex(index: number): BatchClient | undefined {
+		const batch = this.#batches[index]
+		return batch
+	}
 
-	hydrateBatch(batchId: string, options?: Partial<HydrationOptions>) {
-		const batch = this.batches.find((b) => b.id === batchId)
+	getHydratedBatchFromId(batchId: string, options?: Partial<HydrationOptions>) {
+		const batch = this.getBatchFromId(batchId)
 		if (!batch) {
-			throw new Error(
-				"This batch doesn't exist, have you waited the fetch to finish?",
-			)
+			return undefined
 		}
-
-		batch.rehydrate(options)
-
-		return (this.rehydrationComplete = batch.rehydrationComplete)
+		return batch.rehydrate(options)
+	}
+	getHydratedBatchFromIndex(
+		index: number,
+		options?: Partial<HydrationOptions>,
+	) {
+		const batch = this.getBatchFromIndex(index)
+		if (!batch) {
+			return undefined
+		}
+		return batch.rehydrate(options)
 	}
 }

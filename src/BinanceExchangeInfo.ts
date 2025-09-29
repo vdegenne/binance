@@ -47,6 +47,9 @@ export class BinanceExchangeInfo {
 		return this._data
 	}
 
+	/**
+	 * You can pass "*" for all pairs with any quote.
+	 */
 	filterPairs(quote: string) {
 		if (this._data === undefined) {
 			throw new Error(
@@ -55,7 +58,9 @@ export class BinanceExchangeInfo {
 		}
 
 		return this._data.symbols.filter(
-			(symbol) => symbol.quoteAsset === quote && symbol.status === 'TRADING',
+			(symbol) =>
+				(quote === '*' || symbol.quoteAsset === quote) &&
+				symbol.status === 'TRADING',
 		)
 	}
 

@@ -3,7 +3,7 @@ import path from 'node:path'
 import {BinanceExchangeInfoServer} from '../BinanceExchangeInfoServer.js'
 import {BatchBase, BatchBaseOptions} from './BatchBase.js'
 
-export interface BatchServerOptions {
+export interface BatchServerOptions extends BatchBaseOptions {
 	/**
 	 * @default ./data
 	 */
@@ -20,19 +20,19 @@ export interface BatchServerOptions {
 
 export class BatchServer extends BatchBase {
 	protected _binanceExchangeInfo: BinanceExchangeInfoServer | undefined
-	#options: BatchServerOptions
+	protected _options!: BatchServerOptions
 
-	constructor(options?: Partial<BatchBaseOptions & BatchServerOptions>) {
+	constructor(options?: Partial<BatchServerOptions>) {
 		super(options)
-		this.#options = {
+		this._options = {
 			baseDirPath: './data',
 			separateFiles: false,
-			...options,
+			...(this._options as BatchBaseOptions),
 		}
 	}
 
 	async readLocal(batchId: string) {
-		const dirpath = path.join(this.#options.baseDirPath, batchId)
+		const dirpath = path.join(this._options.baseDirPath, batchId)
 		const infoRaw = await fs.readFile(path.join(dirpath, 'info.json'), 'utf-8')
 		this.info = JSON.parse(infoRaw)
 
@@ -52,7 +52,7 @@ export class BatchServer extends BatchBase {
 		}
 		const timestamp = this.info.timestamp
 
-		const dirpath = path.join(this.#options.baseDirPath, timestamp.toString())
+		const dirpath = path.join(this._options.baseDirPath, timestamp.toString())
 
 		await fs.mkdir(dirpath, {recursive: true})
 		await fs.writeFile(
@@ -67,14 +67,14 @@ export class BatchServer extends BatchBase {
 		)
 
 		// Step 1: create the map
-		const pairsKlinesMap: Record<string, any> = {}
+		const pairsKlinesMap: Binance.PairsKlinesMap = {}
 		this.pairs.forEach((pair) => {
-			const key = `${pair.base}_${pair.quote}`
-			pairsKlinesMap[key] = pair.getRawCandles()
+			const pair_name = `${pair.base}_${pair.quote}`
+			pairsKlinesMap[pair_name] = pair.getRawCandles()
 		})
 
 		// Step 2: save each pair separately
-		if (this.#options.separateFiles) {
+		if (this._options.separateFiles) {
 			const pairsDir = path.join(dirpath, 'pairs')
 			await fs.mkdir(pairsDir, {recursive: true})
 

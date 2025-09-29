@@ -4,9 +4,7 @@ import {BatchServer, BatchServerOptions} from './BatchServer.js'
 
 const t = setTimeout(() => {})
 
-interface BatchesManagerServerOptions
-	extends Binance.KlinesOptions,
-		BatchServerOptions {
+interface BatchesManagerServerOptions extends BatchServerOptions {
 	/**
 	 * How many batches to keep
 	 *
@@ -20,6 +18,8 @@ export class BatchesManagerServer {
 
 	constructor(options?: Partial<BatchesManagerServerOptions>) {
 		this.#options = {
+			previousBatch: undefined,
+			quoteAsset: 'USDT',
 			baseDirPath: './data',
 			interval: '1d',
 			keepLast: 10,

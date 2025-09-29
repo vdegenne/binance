@@ -1,6 +1,6 @@
 {
 	"name": "@vdegenne/binance",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "",
 	"type": "module",
 	"exports": {
@@ -30,6 +30,18 @@
 		"./server/batchesManager.js": {
 			"import": "./lib/batch/BatchesManagerServer.js",
 			"types": "./lib/batch/BatchesManagerServer.d.ts"
+		},
+		"./utils.js": {
+			"import": "./lib/utils.js",
+			"types": "./lib/utils.d.ts"
+		},
+		"./pair.js": {
+			"import": "./lib/Pair.js",
+			"types": "./lib/Pair.d.ts"
+		},
+		"./klines.js": {
+			"import": "./lib/kline.js",
+			"types": "./lib/kline.d.ts"
 		}
 	},
 	"scripts": {
